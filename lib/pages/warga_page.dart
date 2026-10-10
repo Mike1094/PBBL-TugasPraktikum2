@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../navigation/app_routes.dart';
+import '../models/favorit_model.dart';
 
 class WargaPage extends StatelessWidget {
   const WargaPage({super.key});
@@ -8,7 +10,7 @@ class WargaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Profil Warga')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,7 +24,28 @@ class WargaPage extends StatelessWidget {
               onPressed: () => Navigator.pushNamed(context, AppRoutes.riwayat),
               icon: const Icon(Icons.history),
               label: const Text('Lihat Riwayat Laporan'),
-            )
+            ),
+            const Divider(height: 40),
+            const Text('Layanan Favorit', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+
+            // Menampilkan daftar favorit reaktif
+            Consumer<FavoritModel>(
+              builder: (context, model, child) {
+                if (model.layananFavorit.isEmpty) {
+                  return const Text('Belum ada layanan yang ditandai.');
+                }
+                return Column(
+                  children: model.layananFavorit
+                      .map((layanan) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.star, color: Colors.orange),
+                    title: Text(layanan),
+                  ))
+                      .toList(),
+                );
+              },
+            ),
           ],
         ),
       ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'app_routes.dart';
 import '../pages/beranda_page.dart';
 import '../pages/layanan_page.dart';
 import '../pages/warga_page.dart';
+import '../models/pengajuan_model.dart';
 
 class KerangkaNavigasi extends StatefulWidget {
   const KerangkaNavigasi({super.key});
@@ -27,16 +29,24 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
   }
 
   void _bukaMenuPendukung(String route) {
-    Navigator.pop(context); // Tutup drawer terlebih dahulu
+    Navigator.pop(context);
     Navigator.pushNamed(context, route);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Hanya mendengarkan perubahan pada properti totalPengajuan
+    int totalPengajuan = context.select<PengajuanModel, int>((model) => model.totalPengajuan);
+
+    Widget buildWargaIcon(IconData iconData) {
+      return totalPengajuan > 0
+          ? Badge(label: Text('$totalPengajuan'), child: Icon(iconData))
+          : Icon(iconData);
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth > 600) {
-          // Tampilan Layar Lebar menggunakan NavigationRail
           return Scaffold(
             body: Row(
               children: [
@@ -44,21 +54,21 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
                   selectedIndex: _currentIndex,
                   onDestinationSelected: _onDestinationSelected,
                   labelType: NavigationRailLabelType.all,
-                  destinations: const [
-                    NavigationRailDestination(
+                  destinations: [
+                    const NavigationRailDestination(
                       icon: Icon(Icons.home_outlined),
                       selectedIcon: Icon(Icons.home),
                       label: Text('Beranda'),
                     ),
-                    NavigationRailDestination(
+                    const NavigationRailDestination(
                       icon: Icon(Icons.list_alt_outlined),
                       selectedIcon: Icon(Icons.list_alt),
                       label: Text('Layanan'),
                     ),
                     NavigationRailDestination(
-                      icon: Icon(Icons.person_outline),
-                      selectedIcon: Icon(Icons.person),
-                      label: Text('Warga'),
+                      icon: buildWargaIcon(Icons.person_outline),
+                      selectedIcon: buildWargaIcon(Icons.person),
+                      label: const Text('Warga'),
                     ),
                   ],
                 ),
@@ -68,26 +78,25 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
             ),
           );
         } else {
-          // Tampilan Layar Sempit menggunakan NavigationBar dan Drawer
           return Scaffold(
             body: _pages[_currentIndex],
             bottomNavigationBar: NavigationBar(
               selectedIndex: _currentIndex,
               onDestinationSelected: _onDestinationSelected,
-              destinations: const [
-                NavigationDestination(
+              destinations: [
+                const NavigationDestination(
                   icon: Icon(Icons.home_outlined),
                   selectedIcon: Icon(Icons.home),
                   label: 'Beranda',
                 ),
-                NavigationDestination(
+                const NavigationDestination(
                   icon: Icon(Icons.list_alt_outlined),
                   selectedIcon: Icon(Icons.list_alt),
                   label: 'Layanan',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person),
+                  icon: buildWargaIcon(Icons.person_outline),
+                  selectedIcon: buildWargaIcon(Icons.person),
                   label: 'Warga',
                 ),
               ],
@@ -98,28 +107,8 @@ class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
                   decoration: BoxDecoration(color: Colors.teal),
                   child: Text('Menu Utama', style: TextStyle(color: Colors.white, fontSize: 24)),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.settings),
-                  title: const Text('Pengaturan Kota'),
-                  onTap: () => _bukaMenuPendukung(AppRoutes.pengaturan),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.info),
-                  title: const Text('Tentang Aplikasi'),
-                  onTap: () => _bukaMenuPendukung(AppRoutes.tentang),
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text('Keluar'),
-                  onTap: () => Navigator.pop(context),
-                ),
-                // Tombol khusus untuk menguji onUnknownRoute
-                ListTile(
-                  leading: const Icon(Icons.error, color: Colors.red),
-                  title: const Text('Uji Rute Salah'),
-                  onTap: () => _bukaMenuPendukung(AppRoutes.testRouteSalah),
-                ),
+                ListTile(leading: const Icon(Icons.settings), title: const Text('Pengaturan'), onTap: () => _bukaMenuPendukung(AppRoutes.pengaturan)),
+                ListTile(leading: const Icon(Icons.info), title: const Text('Tentang'), onTap: () => _bukaMenuPendukung(AppRoutes.tentang)),
               ],
             ),
           );
