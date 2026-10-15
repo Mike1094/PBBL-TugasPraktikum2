@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../navigation/app_routes.dart';
-import '../models/favorit_model.dart';
+import '../cubit/favorit_cubit.dart';
 
-// (Class LayananPage tetap sama persis seperti modul sebelumnya)
+// (Class LayananPage tetap sama persis)
 class LayananPage extends StatelessWidget {
   const LayananPage({super.key});
 
@@ -16,18 +16,10 @@ class LayananPage extends StatelessWidget {
           title: const Text('Layanan Publik'),
           backgroundColor: Colors.teal,
           foregroundColor: Colors.white,
-          bottom: const TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            tabs: [Tab(text: 'Perizinan'), Tab(text: 'Kesehatan'), Tab(text: 'Transportasi')],
-          ),
+          bottom: const TabBar(tabs: [Tab(text: 'Perizinan'), Tab(text: 'Kesehatan'), Tab(text: 'Transportasi')]),
         ),
         body: const TabBarView(
-          children: [
-            DaftarLayanan(kategori: 'Perizinan'),
-            DaftarLayanan(kategori: 'Kesehatan'),
-            DaftarLayanan(kategori: 'Transportasi'),
-          ],
+          children: [DaftarLayanan(kategori: 'Perizinan'), DaftarLayanan(kategori: 'Kesehatan'), DaftarLayanan(kategori: 'Transportasi')],
         ),
       ),
     );
@@ -39,15 +31,8 @@ class DaftarLayanan extends StatelessWidget {
   const DaftarLayanan({super.key, required this.kategori});
 
   void _bukaDetail(BuildContext context, int index, String namaLayanan) async {
-    final dataLayanan = {
-      'nama': namaLayanan,
-      'dinas': 'Dinas $kategori Kota Nusantara',
-      'jam': '08:00 - 15:00',
-      'keterangan': 'Ini adalah deskripsi singkat.',
-    };
-
-    final hasil = await Navigator.pushNamed(context, AppRoutes.detailLayanan, arguments: dataLayanan);
-
+    final data = {'nama': namaLayanan, 'dinas': 'Dinas $kategori Kota Nusantara', 'jam': '08:00 - 15:00', 'keterangan': 'Ini adalah deskripsi singkat.'};
+    final hasil = await Navigator.pushNamed(context, AppRoutes.detailLayanan, arguments: data);
     if (hasil != null && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(hasil.toString())));
     }
@@ -60,28 +45,30 @@ class DaftarLayanan extends StatelessWidget {
       itemBuilder: (context, index) {
         final namaLayanan = 'Layanan $kategori ${index + 1}';
 
-        // Membaca status favorit secara reaktif
-        final isFavorit = context.watch<FavoritModel>().isFavorit(namaLayanan);
+        return BlocBuilder<FavoritCubit, Set<String>>(
+          builder: (context, stateFavorit) {
+            final isFavorit = stateFavorit.contains(namaLayanan);
 
-        return ListTile(
-          leading: const Icon(Icons.assignment),
-          title: Text(namaLayanan),
-          subtitle: Text('Dinas $kategori'),
-          trailing: IconButton(
-            icon: Icon(
-              isFavorit ? Icons.star : Icons.star_border,
-              color: isFavorit ? Colors.orange : null,
-            ),
-            onPressed: () {
-              // Melakukan pembaruan state
-              if (isFavorit) {
-                context.read<FavoritModel>().batalTandai(namaLayanan);
-              } else {
-                context.read<FavoritModel>().tandai(namaLayanan);
-              }
-            },
-          ),
-          onTap: () => _bukaDetail(context, index, namaLayanan),
+            return ListTile(
+              leading: const Icon(Icons.assignment),
+              title: Text(namaLayanan),
+              subtitle: Text('Dinas $kategori'),
+              trailing: IconButton(
+                icon: Icon(
+                  isFavorit ? Icons.star : Icons.star_border,
+                  color: isFavorit ? Colors.orange : null,
+                ),
+                onPressed: () {
+                  if (isFavorit) {
+                    context.read<FavoritCubit>().batalTandai(namaLayanan);
+                  } else {
+                    context.read<FavoritCubit>().tandai(namaLayanan);
+                  }
+                },
+              ),
+              onTap: () => _bukaDetail(context, index, namaLayanan),
+            );
+          },
         );
       },
     );

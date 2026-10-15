@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Impor flutter_bloc
 import 'navigation/app_routes.dart';
-import 'models/favorit_model.dart';
-import 'models/pengajuan_model.dart';
+import 'cubit/favorit_cubit.dart';
+import 'cubit/pengajuan_cubit.dart';
 
 void main() {
   runApp(
-    MultiProvider(
+    MultiBlocProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => FavoritModel()),
-        ChangeNotifierProvider(create: (context) => PengajuanModel()),
+        BlocProvider(create: (context) => FavoritCubit()),
+        BlocProvider(create: (context) => PengajuanCubit()),
       ],
       child: const MyApp(),
     ),
